@@ -34,7 +34,7 @@ class InstagramScraper:
             password_input.send_keys(password)
             
             password_input.send_keys(Keys.RETURN)
-            time.sleep(15)
+            time.sleep(5)
             
             try:
                 not_now_btn = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Not now') or contains(text(), 'Not Now')]")
@@ -66,12 +66,12 @@ class InstagramScraper:
             print(f"Error membuka post: {e}")
             return False
     
-    def load_all_comments(self, max_scroll=120):
+    def load_all_comments(self, max_scroll=20):
         try:
             try:
                 view_all = self.driver.find_element(By.XPATH, "//button[contains(@class, '_acan') or contains(text(), 'View all')]")
                 view_all.click()
-                time.sleep(10)
+                time.sleep(2)
             except:
                 pass
             
@@ -158,34 +158,43 @@ class InstagramScraper:
                     comment_list_items = self.driver.find_elements(By.XPATH, "//article//ul/li")
                     print(f"Metode 3: Menemukan {len(comment_list_items)} item komentar...")
                 
-                for item in comment_list_items:
+                for idx, item in enumerate(comment_list_items):
                     try:
+                        all_spans = item.find_elements(By.TAG_NAME, "span")
+                        print(f"Li #{idx+1}: menemukan {len(all_spans)} span elements")
+                        
                         username_elem = item.find_element(By.XPATH, 
                             ".//span[contains(@class, '_ap3a')]")
                         username = username_elem.text.strip()
+                        print(f"  Username: {username}")
                         
                         comment_elem = item.find_element(By.XPATH, 
                             ".//span[contains(@class, 'x1lliihq') and contains(@class, 'x5n08af')]")
                         comment_text = comment_elem.text.strip()
+                        print(f"  Komentar: {comment_text[:50]}...")
                         
                         if username and comment_text and username != comment_text:
                             comments.append({
                                 "username": username,
                                 "comment": comment_text
                             })
+                            print(f"  ✓ Berhasil ditambahkan")
                     except Exception as e:
+                        print(f"  ✗ Error pada li #{idx+1}: {e}")
                         continue
                         
             except Exception as e:
                 print(f"Error metode li: {e}")
-                
+            
+            if len(comments) == 0:
+                print("\nMencoba metode fallback (pairing)...")
                 username_elements = self.driver.find_elements(By.XPATH, 
                     "//span[contains(@class, '_ap3a') and contains(@class, '_aaco')]")
                 
                 comment_elements = self.driver.find_elements(By.XPATH, 
                     "//span[contains(@class, 'x1lliihq') and contains(@class, 'x5n08af')]")
                 
-                print(f"Metode fallback: {len(username_elements)} username, {len(comment_elements)} komentar...")
+                print(f"Menemukan: {len(username_elements)} username, {len(comment_elements)} komentar")
                 
                 for i in range(min(len(username_elements), len(comment_elements))):
                     try:
@@ -208,7 +217,7 @@ class InstagramScraper:
                     seen.add(comment_tuple)
                     unique_comments.append(comment)
             
-            print(f"Total komentar ditemukan: {len(unique_comments)}")
+            print(f"\nTotal komentar ditemukan: {len(unique_comments)}")
             return unique_comments
             
         except Exception as e:
@@ -267,8 +276,8 @@ class InstagramScraper:
 if __name__ == "__main__":
     scraper = InstagramScraper()
     
-    USERNAME = "r.obbiul.013"
-    PASSWORD = "Robbi13@#$"
+    USERNAME = "username_anda"
+    PASSWORD = "password_anda"
     POST_URL = "https://www.instagram.com/p/DOOm-zgE1zC/"
     
     try:
