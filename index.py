@@ -66,7 +66,7 @@ class InstagramScraper:
             print(f"Error membuka post: {e}")
             return False
     
-    def load_all_comments(self, max_scroll=20):
+    def load_all_comments(self, max_scroll=120):
         try:
             try:
                 view_all = self.driver.find_element(By.XPATH, "//button[contains(@class, '_acan') or contains(text(), 'View all')]")
@@ -145,69 +145,44 @@ class InstagramScraper:
         try:
             time.sleep(3)
             
-            try:
-                comment_list_items = self.driver.find_elements(By.XPATH, 
-                    "//ul//li[contains(@class, 'x1lziwak')]")
-                print(f"Metode 1: Menemukan {len(comment_list_items)} item komentar...")
-                
-                if len(comment_list_items) == 0:
-                    comment_list_items = self.driver.find_elements(By.XPATH, "//ul/li")
-                    print(f"Metode 2: Menemukan {len(comment_list_items)} item li...")
-                
-                if len(comment_list_items) == 0:
-                    comment_list_items = self.driver.find_elements(By.XPATH, "//article//ul/li")
-                    print(f"Metode 3: Menemukan {len(comment_list_items)} item komentar...")
-                
-                for idx, item in enumerate(comment_list_items):
-                    try:
-                        all_spans = item.find_elements(By.TAG_NAME, "span")
-                        print(f"Li #{idx+1}: menemukan {len(all_spans)} span elements")
-                        
-                        username_elem = item.find_element(By.XPATH, 
-                            ".//span[contains(@class, '_ap3a')]")
-                        username = username_elem.text.strip()
-                        print(f"  Username: {username}")
-                        
-                        comment_elem = item.find_element(By.XPATH, 
-                            ".//span[contains(@class, 'x1lliihq') and contains(@class, 'x5n08af')]")
-                        comment_text = comment_elem.text.strip()
-                        print(f"  Komentar: {comment_text[:50]}...")
-                        
-                        if username and comment_text and username != comment_text:
-                            comments.append({
-                                "username": username,
-                                "comment": comment_text
-                            })
-                            print(f"  ✓ Berhasil ditambahkan")
-                    except Exception as e:
-                        print(f"  ✗ Error pada li #{idx+1}: {e}")
-                        continue
-                        
-            except Exception as e:
-                print(f"Error metode li: {e}")
+            print("Mengambil semua username...")
+            username_elements = self.driver.find_elements(By.XPATH, 
+                "//span[contains(@class, '_ap3a') and contains(@class, '_aaco') and contains(@class, '_aacw') and contains(@class, '_aacx') and contains(@class, '_aad7') and contains(@class, '_aade')]")
             
-            if len(comments) == 0:
-                print("\nMencoba metode fallback (pairing)...")
-                username_elements = self.driver.find_elements(By.XPATH, 
-                    "//span[contains(@class, '_ap3a') and contains(@class, '_aaco')]")
+            print("Mengambil semua komentar...")
+            comment_elements = self.driver.find_elements(By.XPATH, 
+                "//span[contains(@class, 'x1lliihq') and contains(@class, 'x1plvlek') and contains(@class, 'xryxfnj') and contains(@class, 'x1n2onr6') and contains(@class, 'x5n08af') and contains(@class, 'x10wh9bi') and contains(@class, 'xpm28yp') and contains(@class, 'x8viiok') and contains(@class, 'x1o7cslx')]")
+            
+            print(f"Menemukan {len(username_elements)} username")
+            print(f"Menemukan {len(comment_elements)} komentar")
+            
+            if len(username_elements) > 0 and len(comment_elements) > 0:
+                username_first = username_elements[0].text.strip()
+                comment_first = comment_elements[0].text.strip()
+                print(f"Username pertama: {username_first}")
+                print(f"Komentar pertama: {comment_first[:50]}...")
                 
-                comment_elements = self.driver.find_elements(By.XPATH, 
-                    "//span[contains(@class, 'x1lliihq') and contains(@class, 'x5n08af')]")
-                
-                print(f"Menemukan: {len(username_elements)} username, {len(comment_elements)} komentar")
-                
-                for i in range(min(len(username_elements), len(comment_elements))):
-                    try:
-                        username = username_elements[i].text.strip()
-                        comment_text = comment_elements[i].text.strip()
-                        
-                        if username and comment_text and username != comment_text:
-                            comments.append({
-                                "username": username,
-                                "comment": comment_text
-                            })
-                    except:
-                        continue
+                if username_first == comment_first or len(comment_first) > 100:
+                    print("Komentar pertama sepertinya caption post, skip...")
+                    comment_elements = comment_elements[1:]
+            
+            min_length = min(len(username_elements), len(comment_elements))
+            print(f"Akan memproses {min_length} pasangan username-komentar\n")
+            
+            for i in range(min_length):
+                try:
+                    username = username_elements[i].text.strip()
+                    comment_text = comment_elements[i].text.strip()
+                    
+                    if username and comment_text and username != comment_text:
+                        comments.append({
+                            "username": username,
+                            "comment": comment_text
+                        })
+                        if i < 3:
+                            print(f"{i+1}. @{username}: {comment_text[:50]}...")
+                except Exception as e:
+                    continue
             
             seen = set()
             unique_comments = []
@@ -217,7 +192,7 @@ class InstagramScraper:
                     seen.add(comment_tuple)
                     unique_comments.append(comment)
             
-            print(f"\nTotal komentar ditemukan: {len(unique_comments)}")
+            print(f"\nTotal komentar unik ditemukan: {len(unique_comments)}")
             return unique_comments
             
         except Exception as e:
@@ -276,8 +251,8 @@ class InstagramScraper:
 if __name__ == "__main__":
     scraper = InstagramScraper()
     
-    USERNAME = "username_anda"
-    PASSWORD = "password_anda"
+    USERNAME = "r.obbiul.013"
+    PASSWORD = "Robbi13@#$"
     POST_URL = "https://www.instagram.com/p/DOOm-zgE1zC/"
     
     try:
