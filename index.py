@@ -66,7 +66,7 @@ class InstagramScraper:
             print(f"Error membuka post: {e}")
             return False
     
-    def load_all_comments(self, max_scroll=120):
+    def load_all_comments(self, max_scroll=20):
         try:
             try:
                 view_all = self.driver.find_element(By.XPATH, "//button[contains(@class, '_acan') or contains(text(), 'View all')]")
@@ -251,8 +251,8 @@ class InstagramScraper:
 if __name__ == "__main__":
     scraper = InstagramScraper()
     
-    USERNAME = "r.obbiul.013"
-    PASSWORD = "Robbi13@#$"
+    USERNAME = "username_anda"
+    PASSWORD = "password_anda"
     POST_URL = "https://www.instagram.com/p/DOOm-zgE1zC/"
     
     try:
